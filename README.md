@@ -1,1 +1,17 @@
-# online-booking-db-variant-1
+# Онлайн-запись: стоматологическая клиника
+Вариант 1
+СУБД: MySQL 8.0
+
+## Автор
+Агизов Ибрагим, 454 группа
+
+## Сущности
+-clients - клиенты
+-dentists - врачи
+- services - услуги
+- medical_cards - медицинские карты
+- appointments - записи на прием
+
+## Запуск 
+1. Установить MySQL 8.0
+2. Выполнить sql/schema_variant.sql
