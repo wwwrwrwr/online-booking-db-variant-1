@@ -1,6 +1,5 @@
 <?php
 // views/layout.php
-// Единый HTML-шаблон для всех страниц (Bootstrap 5)
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -21,18 +20,22 @@
 </head>
 <body>
     <div class="container">
-        <!-- Вывод flash-сообщений -->
-        <?php if ($success = getFlashMessage('success')): ?>
+        <?php
+        $success = $_SESSION['flash_success'] ?? null;
+        unset($_SESSION['flash_success']);
+        $error = $_SESSION['flash_error'] ?? null;
+        unset($_SESSION['flash_error']);
+        ?>
+        <?php if ($success): ?>
             <div class="flash-success"><?= htmlspecialchars($success) ?></div>
         <?php endif; ?>
-        <?php if ($error = getFlashMessage('error')): ?>
+        <?php if ($error): ?>
             <div class="flash-error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
-        
-        <!-- Основной контент страницы -->
+
         <?= $content ?? '' ?>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
