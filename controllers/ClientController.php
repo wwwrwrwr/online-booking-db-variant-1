@@ -1,6 +1,5 @@
 <?php
 // controllers/ClientController.php
-// Контроллер для управления справочником «Клиенты»
 
 class ClientController
 {
@@ -36,16 +35,12 @@ class ClientController
         }
     }
 
-    /**
-     * Список клиентов с пагинацией и сортировкой
-     */
     private function listAction(): void
     {
         $page = max(1, (int)($_GET['page'] ?? 1));
         $limit = 10;
         $offset = ($page - 1) * $limit;
-        
-        // Сортировка (только разрешённые поля)
+
         $orderBy = $_GET['sort'] ?? 'client_id';
         $allowedSort = ['client_id', 'last_name', 'first_name', 'phone', 'email', 'birth_date'];
         if (!in_array($orderBy, $allowedSort, true)) {
@@ -57,7 +52,6 @@ class ClientController
         $total = $this->pdo->query("SELECT COUNT(*) FROM clients")->fetchColumn();
         $pages = ceil($total / $limit);
 
-        // Рендер представления
         $title = 'Справочник: Клиенты';
         $content = $this->render('client/list', [
             'clients' => $clients,
@@ -70,20 +64,15 @@ class ClientController
         require __DIR__ . '/../views/layout.php';
     }
 
-    /**
-     * Страница создания нового клиента
-     */
     private function createAction(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // CSRF-проверка
             if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
                 setFlashMessage('error', 'Ошибка безопасности');
                 header('Location: ?entity=client&action=list');
                 exit;
             }
 
-            // Валидация
             $errors = $this->validateClient($_POST);
             if (empty($errors)) {
                 try {
@@ -102,7 +91,6 @@ class ClientController
                     setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
                 }
             } else {
-                // Возврат формы с ошибками и старыми данными
                 $title = 'Добавить клиента';
                 $content = $this->render('client/form', [
                     'errors' => $errors,
@@ -125,9 +113,6 @@ class ClientController
         require __DIR__ . '/../views/layout.php';
     }
 
-    /**
-     * Страница редактирования клиента
-     */
     private function editAction(?int $id): void
     {
         if ($id === null) {
@@ -154,7 +139,7 @@ class ClientController
             if (empty($errors)) {
                 try {
                     $stmt = $this->pdo->prepare("
-                        UPDATE clients SET 
+                        UPDATE clients SET
                             last_name = :last_name,
                             first_name = :first_name,
                             patronymic = :patronymic,
@@ -203,9 +188,6 @@ class ClientController
         require __DIR__ . '/../views/layout.php';
     }
 
-    /**
-     * Удаление клиента с проверкой связей
-     */
     private function deleteAction(?int $id): void
     {
         if ($id === null) {
@@ -221,13 +203,15 @@ class ClientController
                 exit;
             }
 
-            // Проверка: есть ли записи на приёмы у этого клиента
-            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM appointments WHERE client_id = :id");
+            $stmt = $this->pdo->prepare(
+                "SELECT COUNT(*) FROM appointments WHERE client_id = :id"
+            );
             $stmt->execute(['id' => $id]);
             $count = (int)$stmt->fetchColumn();
 
             if ($count > 0) {
-                setFlashMessage('error', "Нельзя удалить: у клиента есть записи на приём ($count шт.)");
+                setFlashMessage('error',
+                    "Нельзя удалить: у клиента есть записи на приём ($count шт.)");
                 header('Location: ?entity=client&action=list');
                 exit;
             }
@@ -242,7 +226,6 @@ class ClientController
             exit;
         }
 
-        // Страница подтверждения
         $client = $this->repo->findById($id);
         if (!$client) {
             http_response_code(404);
@@ -258,9 +241,6 @@ class ClientController
         require __DIR__ . '/../views/layout.php';
     }
 
-    /**
-     * Валидация данных клиента
-     */
     private function validateClient(array $data): array
     {
         $errors = [];
@@ -280,7 +260,6 @@ class ClientController
         if (empty($data['birth_date']) || $data['birth_date'] > date('Y-m-d')) {
             $errors['birth_date'] = 'Дата рождения не может быть в будущем';
         }
-        // Проверка возраста (≥18 лет)
         if (!empty($data['birth_date'])) {
             $age = date_diff(new DateTime($data['birth_date']), new DateTime())->y;
             if ($age < 18) {
@@ -290,3 +269,12 @@ class ClientController
 
         return $errors;
     }
+
+    private function render(string $view, array $data = []): string
+    {
+        extract($data);
+        ob_start();
+        require __DIR__ . "/../views/{$view}.php";
+        return ob_get_clean();
+    }
+}
