@@ -1,5 +1,5 @@
 <?php
-require_once 'RepositoryException.php';
+require_once __DIR__ . '/RepositoryException.php';
 
 abstract class AbstractRepository
 {
@@ -16,16 +16,21 @@ abstract class AbstractRepository
 
     public function findById(int $id): ?array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE {$this->primaryKey} = :id");
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM {$this->table} WHERE {$this->primaryKey} = :id"
+        );
         $stmt->execute(['id' => $id]);
         return $stmt->fetch() ?: null;
     }
 
-    public function findAll(array $where = [], array $params = [], ?string $orderBy = null, ?int $limit = null): array
-    {
+    public function findAll(
+        array $where = [],
+        array $params = [],
+        ?string $orderBy = null,
+        ?int $limit = null
+    ): array {
         $sql = "SELECT * FROM {$this->table}";
         $bindings = $params;
-
         if (!empty($where)) {
             $conditions = [];
             foreach ($where as $column => $value) {
@@ -35,18 +40,14 @@ abstract class AbstractRepository
             }
             $sql .= " WHERE " . implode(' AND ', $conditions);
         }
-
-        // Валидация сортировки по белому списку (требование методички)
         $allowedOrders = ['ASC', 'DESC'];
         if ($orderBy !== null && in_array(strtoupper($orderBy), $allowedOrders, true)) {
             $sql .= " ORDER BY created_at " . strtoupper($orderBy);
         }
-
         if ($limit !== null) {
             $sql .= " LIMIT :limit";
             $bindings[':limit'] = (int)$limit;
         }
-
         $stmt = $this->pdo->prepare($sql);
         foreach ($bindings as $key => $val) {
             $stmt->bindValue($key, $val, is_int($val) ? PDO::PARAM_INT : PDO::PARAM_STR);
@@ -57,7 +58,9 @@ abstract class AbstractRepository
 
     public function delete(int $id): bool
     {
-        $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE {$this->primaryKey} = :id");
+        $stmt = $this->pdo->prepare(
+            "DELETE FROM {$this->table} WHERE {$this->primaryKey} = :id"
+        );
         $result = $stmt->execute(['id' => $id]);
         if (!$result) {
             throw new RepositoryException("Не удалось удалить запись с ID {$id}");
