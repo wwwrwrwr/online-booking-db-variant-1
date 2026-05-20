@@ -6,13 +6,19 @@ class DentistRepository extends AbstractRepository
     protected string $table = 'dentists';
     protected string $primaryKey = 'dentist_id';
 
+    public function __construct(PDO $pdo)
+    {
+        parent::__construct($pdo, 'dentists', 'dentist_id');
+    }
+
     public function findAll(
-        array $conditions = [],
+        array $where = [],
         array $params = [],
-        string $orderBy = 'dentist_id ASC',
+        ?string $orderBy = null,
         ?int $limit = null
     ): array {
-        $sql = "SELECT * FROM {$this->table} ORDER BY {$orderBy}";
+        $order = $orderBy ?? 'dentist_id ASC';
+        $sql = "SELECT * FROM {$this->table} ORDER BY {$order}";
         if ($limit) $sql .= " LIMIT {$limit}";
         $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -55,11 +61,15 @@ class DentistRepository extends AbstractRepository
         $stmt->execute($data);
     }
 
-    public function delete(int $id): void
+    public function delete(int $id): bool
     {
         $stmt = $this->pdo->prepare(
             "DELETE FROM {$this->table} WHERE {$this->primaryKey} = ?"
         );
-        $stmt->execute([$id]);
+        $result = $stmt->execute([$id]);
+        if (!$result) {
+            throw new RepositoryException("Не удалось удалить запись с ID {$id}");
+        }
+        return true;
     }
 }
