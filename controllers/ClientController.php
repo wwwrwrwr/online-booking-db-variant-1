@@ -39,7 +39,6 @@ class ClientController
     {
         $page = max(1, (int)($_GET['page'] ?? 1));
         $limit = 10;
-        $offset = ($page - 1) * $limit;
 
         $orderBy = $_GET['sort'] ?? 'client_id';
         $allowedSort = ['client_id', 'last_name', 'first_name', 'phone', 'email', 'birth_date'];
@@ -48,18 +47,40 @@ class ClientController
         }
         $direction = strtoupper($_GET['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
 
-        $clients = $this->repo->findAll([], [], "$orderBy $direction", $limit);
-        $total = $this->pdo->query("SELECT COUNT(*) FROM clients")->fetchColumn();
+        $search = trim($_GET['search'] ?? '');
+
+        if ($search !== '') {
+            $stmt = $this->pdo->prepare("
+                SELECT * FROM clients
+                WHERE last_name LIKE :search
+                ORDER BY {$orderBy} {$direction}
+                LIMIT :limit
+            ");
+            $stmt->bindValue(':search', '%' . $search . '%');
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            $clients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $stmt2 = $this->pdo->prepare(
+                "SELECT COUNT(*) FROM clients WHERE last_name LIKE :search"
+            );
+            $stmt2->execute([':search' => '%' . $search . '%']);
+            $total = $stmt2->fetchColumn();
+        } else {
+            $clients = $this->repo->findAll([], [], "$orderBy $direction", $limit);
+            $total = $this->pdo->query("SELECT COUNT(*) FROM clients")->fetchColumn();
+        }
+
         $pages = ceil($total / $limit);
 
         $title = 'Справочник: Клиенты';
         $content = $this->render('client/list', [
-            'clients' => $clients,
-            'page' => $page,
-            'pages' => $pages,
-            'orderBy' => $orderBy,
+            'clients'   => $clients,
+            'page'      => $page,
+            'pages'     => $pages,
+            'orderBy'   => $orderBy,
             'direction' => $direction,
-            'entity' => $this->entity
+            'entity'    => $this->entity
         ]);
         require __DIR__ . '/../views/layout.php';
     }
@@ -67,8 +88,8 @@ class ClientController
     private function createAction(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-                setFlashMessage('error', 'Ошибка безопасности');
+            if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
+                $_SESSION['flash_error'] = 'Ошибка безопасности';
                 header('Location: ?entity=client&action=list');
                 exit;
             }
@@ -77,24 +98,24 @@ class ClientController
             if (empty($errors)) {
                 try {
                     $this->repo->create([
-                        'last_name' => trim($_POST['last_name']),
+                        'last_name'  => trim($_POST['last_name']),
                         'first_name' => trim($_POST['first_name']),
                         'patronymic' => trim($_POST['patronymic'] ?? ''),
-                        'phone' => trim($_POST['phone']),
-                        'email' => trim($_POST['email']),
+                        'phone'      => trim($_POST['phone']),
+                        'email'      => trim($_POST['email']),
                         'birth_date' => $_POST['birth_date']
                     ]);
-                    setFlashMessage('success', 'Клиент успешно добавлен');
+                    $_SESSION['flash_success'] = 'Клиент успешно добавлен';
                     header('Location: ?entity=client&action=list');
                     exit;
                 } catch (RepositoryException $e) {
-                    setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
+                    $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
                 }
             } else {
                 $title = 'Добавить клиента';
                 $content = $this->render('client/form', [
                     'errors' => $errors,
-                    'old' => $_POST,
+                    'old'    => $_POST,
                     'isEdit' => false,
                     'entity' => $this->entity
                 ]);
@@ -106,7 +127,7 @@ class ClientController
         $title = 'Добавить клиента';
         $content = $this->render('client/form', [
             'errors' => [],
-            'old' => [],
+            'old'    => [],
             'isEdit' => false,
             'entity' => $this->entity
         ]);
@@ -129,8 +150,8 @@ class ClientController
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-                setFlashMessage('error', 'Ошибка безопасности');
+            if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
+                $_SESSION['flash_error'] = 'Ошибка безопасности';
                 header('Location: ?entity=client&action=list');
                 exit;
             }
@@ -140,34 +161,34 @@ class ClientController
                 try {
                     $stmt = $this->pdo->prepare("
                         UPDATE clients SET
-                            last_name = :last_name,
+                            last_name  = :last_name,
                             first_name = :first_name,
                             patronymic = :patronymic,
-                            phone = :phone,
-                            email = :email,
+                            phone      = :phone,
+                            email      = :email,
                             birth_date = :birth_date
                         WHERE client_id = :id
                     ");
                     $stmt->execute([
-                        'last_name' => trim($_POST['last_name']),
+                        'last_name'  => trim($_POST['last_name']),
                         'first_name' => trim($_POST['first_name']),
                         'patronymic' => trim($_POST['patronymic'] ?? ''),
-                        'phone' => trim($_POST['phone']),
-                        'email' => trim($_POST['email']),
+                        'phone'      => trim($_POST['phone']),
+                        'email'      => trim($_POST['email']),
                         'birth_date' => $_POST['birth_date'],
-                        'id' => $id
+                        'id'         => $id
                     ]);
-                    setFlashMessage('success', 'Данные обновлены');
+                    $_SESSION['flash_success'] = 'Данные обновлены';
                     header('Location: ?entity=client&action=list');
                     exit;
                 } catch (RepositoryException $e) {
-                    setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
+                    $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
                 }
             } else {
                 $title = 'Редактировать клиента';
                 $content = $this->render('client/form', [
                     'errors' => $errors,
-                    'old' => $_POST,
+                    'old'    => $_POST,
                     'isEdit' => true,
                     'client' => $client,
                     'entity' => $this->entity
@@ -180,7 +201,7 @@ class ClientController
         $title = 'Редактировать клиента';
         $content = $this->render('client/form', [
             'errors' => [],
-            'old' => $client,
+            'old'    => $client,
             'isEdit' => true,
             'client' => $client,
             'entity' => $this->entity
@@ -197,8 +218,8 @@ class ClientController
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-                setFlashMessage('error', 'Ошибка безопасности');
+            if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
+                $_SESSION['flash_error'] = 'Ошибка безопасности';
                 header('Location: ?entity=client&action=list');
                 exit;
             }
@@ -210,17 +231,17 @@ class ClientController
             $count = (int)$stmt->fetchColumn();
 
             if ($count > 0) {
-                setFlashMessage('error',
-                    "Нельзя удалить: у клиента есть записи на приём ($count шт.)");
+                $_SESSION['flash_error'] =
+                    "Нельзя удалить: у клиента есть записи на приём ($count шт.)";
                 header('Location: ?entity=client&action=list');
                 exit;
             }
 
             try {
                 $this->repo->delete($id);
-                setFlashMessage('success', 'Клиент удалён');
+                $_SESSION['flash_success'] = 'Клиент удалён';
             } catch (RepositoryException $e) {
-                setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
+                $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
             }
             header('Location: ?entity=client&action=list');
             exit;
