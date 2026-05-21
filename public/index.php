@@ -18,7 +18,7 @@ $action = $_GET['action'] ?? 'list';
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
 // Валидация entity — разрешённые справочники
-$allowedEntities = ['client', 'service', 'dentist'];
+$allowedEntities = ['client', 'service', 'dentist', 'appointment'];
 if (!in_array($entity, $allowedEntities, true)) {
     http_response_code(400);
     echo "Недопустимый справочник";
