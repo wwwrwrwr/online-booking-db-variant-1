@@ -17,10 +17,10 @@ class DentistController
     public function handle(string $action, ?int $id = null): void
     {
         switch ($action) {
-            case 'list':   $this->listAction();         break;
-            case 'create': $this->createAction();       break;
-            case 'edit':   $this->editAction($id);      break;
-            case 'delete': $this->deleteAction($id);    break;
+            case 'list':   $this->listAction();      break;
+            case 'create': $this->createAction();    break;
+            case 'edit':   $this->editAction($id);   break;
+            case 'delete': $this->deleteAction($id); break;
             default:
                 http_response_code(404);
                 echo "Действие не найдено";
@@ -56,8 +56,8 @@ class DentistController
     private function createAction(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-                setFlashMessage('error', 'Ошибка безопасности');
+            if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
+                $_SESSION['flash_error'] = 'Ошибка безопасности';
                 header('Location: ?entity=dentist&action=list');
                 exit;
             }
@@ -71,11 +71,11 @@ class DentistController
                         'phone'          => trim($_POST['phone']),
                         'cabinet_number' => (int)$_POST['cabinet_number']
                     ]);
-                    setFlashMessage('success', 'Врач добавлен');
+                    $_SESSION['flash_success'] = 'Врач добавлен';
                     header('Location: ?entity=dentist&action=list');
                     exit;
                 } catch (RepositoryException $e) {
-                    setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
+                    $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
                 }
             }
             $title   = 'Добавить врача';
@@ -106,8 +106,8 @@ class DentistController
         if (!$dentist) { http_response_code(404); echo "Врач не найден"; return; }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-                setFlashMessage('error', 'Ошибка безопасности');
+            if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
+                $_SESSION['flash_error'] = 'Ошибка безопасности';
                 header('Location: ?entity=dentist&action=list');
                 exit;
             }
@@ -121,11 +121,11 @@ class DentistController
                         'phone'          => trim($_POST['phone']),
                         'cabinet_number' => (int)$_POST['cabinet_number']
                     ]);
-                    setFlashMessage('success', 'Данные обновлены');
+                    $_SESSION['flash_success'] = 'Данные обновлены';
                     header('Location: ?entity=dentist&action=list');
                     exit;
                 } catch (RepositoryException $e) {
-                    setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
+                    $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
                 }
             }
             $title   = 'Редактировать врача';
@@ -156,8 +156,8 @@ class DentistController
         if ($id === null) { http_response_code(400); echo "Не указан ID"; return; }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-                setFlashMessage('error', 'Ошибка безопасности');
+            if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
+                $_SESSION['flash_error'] = 'Ошибка безопасности';
                 header('Location: ?entity=dentist&action=list');
                 exit;
             }
@@ -167,16 +167,16 @@ class DentistController
             $stmt->execute(['id' => $id]);
             $count = (int)$stmt->fetchColumn();
             if ($count > 0) {
-                setFlashMessage('error',
-                    "Нельзя удалить: у врача есть записи на приём ($count шт.)");
+                $_SESSION['flash_error'] =
+                    "Нельзя удалить: у врача есть записи на приём ($count шт.)";
                 header('Location: ?entity=dentist&action=list');
                 exit;
             }
             try {
                 $this->repo->delete($id);
-                setFlashMessage('success', 'Врач удалён');
+                $_SESSION['flash_success'] = 'Врач удалён';
             } catch (RepositoryException $e) {
-                setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
+                $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
             }
             header('Location: ?entity=dentist&action=list');
             exit;
