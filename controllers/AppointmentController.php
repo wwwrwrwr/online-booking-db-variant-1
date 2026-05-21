@@ -17,10 +17,11 @@ class AppointmentController
     public function handle(string $action, ?int $id = null): void
     {
         switch ($action) {
-            case 'list':   $this->listAction();      break;
-            case 'create': $this->createAction();    break;
-            case 'view':   $this->viewAction($id);   break;
-            case 'cancel': $this->cancelAction($id); break;
+            case 'list':    $this->listAction();      break;
+            case 'create':  $this->createAction();    break;
+            case 'view':    $this->viewAction($id);   break;
+            case 'cancel':  $this->cancelAction($id); break;
+            case 'reports': $this->reportsAction();   break;
             default:
                 http_response_code(404);
                 echo "Действие не найдено";
@@ -133,7 +134,6 @@ class AppointmentController
 
             $errors = $this->validateAppointment($_POST);
             if (empty($errors)) {
-                // Проверка что слот свободен
                 $stmt = $this->pdo->prepare("
                     SELECT COUNT(*) FROM appointments
                     WHERE dentist_id = :dentist_id
@@ -241,6 +241,44 @@ class AppointmentController
         $content = $this->render('appointment/cancel', [
             'appointment' => $appointment,
             'entity'      => $this->entity
+        ]);
+        require __DIR__ . '/../views/layout.php';
+    }
+
+    private function reportsAction(): void
+    {
+        $report1 = $this->pdo->query("
+            SELECT
+                DATE(a.appointment_datetime) AS day,
+                COUNT(*) AS cnt,
+                SUM(s.price) AS revenue
+            FROM appointments a
+            JOIN services s ON a.service_id = s.service_id
+            WHERE a.status != 'отменено'
+            GROUP BY DATE(a.appointment_datetime)
+            ORDER BY day
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $report2 = $this->pdo->query("
+            SELECT
+                d.last_name, d.first_name, d.specialization,
+                COUNT(a.appointment_id) AS cnt
+            FROM dentists d
+            LEFT JOIN appointments a ON d.dentist_id = a.dentist_id
+            GROUP BY d.dentist_id
+            ORDER BY cnt DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $report3 = $this->pdo->query("
+            SELECT COUNT(*) FROM appointments WHERE status = 'отменено'
+        ")->fetchColumn();
+
+        $title   = 'Отчёты';
+        $content = $this->render('appointment/reports', [
+            'report1' => $report1,
+            'report2' => $report2,
+            'report3' => $report3,
+            'entity'  => $this->entity
         ]);
         require __DIR__ . '/../views/layout.php';
     }
