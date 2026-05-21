@@ -4,11 +4,12 @@
 ?>
 <div class="card">
     <div class="card-header">
-        <h4><?= $isEdit ? '✏️ Редактировать' : '➕ Добавить' ?> клиента</h4>
+        <h4><?= $isEdit ? 'Редактировать' : 'Добавить' ?> клиента</h4>
     </div>
     <div class="card-body">
         <form method="post" novalidate>
-            <input type="hidden" name="csrf_token" value="<?= generateCsrfToken() ?>">
+            <input type="hidden" name="csrf_token"
+       value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
             
             <div class="row g-3">
                 <div class="col-md-4">
@@ -62,8 +63,8 @@
             </div>
             
             <div class="mt-4">
-                <button type="submit" class="btn btn-success"><?= $isEdit ? '💾 Сохранить' : '✅ Создать' ?></button>
-                <a href="?entity=<?= $entity ?>&action=list" class="btn btn-secondary">↩️ Отмена</a>
+                <button type="submit" class="btn btn-success"><?= $isEdit ? 'Сохранить' : 'Создать' ?></button>
+                <a href="?entity=<?= $entity ?>&action=list" class="btn btn-secondary">Отмена</a>
             </div>
         </form>
     </div>
