@@ -17,11 +17,12 @@ class AppointmentController
     public function handle(string $action, ?int $id = null): void
     {
         switch ($action) {
-            case 'list':    $this->listAction();      break;
-            case 'create':  $this->createAction();    break;
-            case 'view':    $this->viewAction($id);   break;
-            case 'cancel':  $this->cancelAction($id); break;
-            case 'reports': $this->reportsAction();   break;
+            case 'list':     $this->listAction();      break;
+            case 'create':   $this->createAction();    break;
+            case 'view':     $this->viewAction($id);   break;
+            case 'cancel':   $this->cancelAction($id); break;
+            case 'complete': $this->completeAction($id); break;
+            case 'reports':  $this->reportsAction();   break;
             default:
                 http_response_code(404);
                 echo "Действие не найдено";
@@ -243,6 +244,28 @@ class AppointmentController
             'entity'      => $this->entity
         ]);
         require __DIR__ . '/../views/layout.php';
+    }
+
+    private function completeAction(?int $id): void
+    {
+        if ($id === null) {
+            http_response_code(400); echo "Не указан ID"; return;
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE appointments SET status = 'проведено'
+            WHERE appointment_id = :id
+            AND status = 'запланировано'
+        ");
+        $stmt->execute(['id' => $id]);
+
+        if ($stmt->rowCount() > 0) {
+            $_SESSION['flash_success'] = 'Запись отмечена как проведённая';
+        } else {
+            $_SESSION['flash_error'] = 'Нельзя провести эту запись';
+        }
+        header('Location: ?entity=appointment&action=list');
+        exit;
     }
 
     private function reportsAction(): void
