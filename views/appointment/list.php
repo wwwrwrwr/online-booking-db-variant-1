@@ -1,6 +1,5 @@
 <div class="container mt-4">
   <h2>Записи на приём</h2>
-
   <!-- Фильтры -->
   <form class="row g-2 mb-3" method="get">
     <input type="hidden" name="entity" value="appointment">
@@ -37,11 +36,9 @@
       <a href="?entity=appointment&action=list" class="btn btn-outline-secondary">Сброс</a>
     </div>
   </form>
-
   <a href="?entity=appointment&action=create" class="btn btn-primary mb-3">
     + Создать запись
   </a>
-
   <?php if (empty($appointments)): ?>
     <div class="alert alert-info">Нет записей</div>
   <?php else: ?>
@@ -77,8 +74,12 @@
           <td>
             <a href="?entity=appointment&action=view&id=<?= $a['appointment_id'] ?>"
                class="btn btn-sm btn-info">Просмотр</a>
-            <a href="?entity=appointment&action=cancel&id=<?= $a['appointment_id'] ?>"
-               class="btn btn-sm btn-danger">Отмена</a>
+            <?php if ($a['status'] === 'запланировано'): ?>
+              <a href="?entity=appointment&action=complete&id=<?= $a['appointment_id'] ?>"
+                 class="btn btn-sm btn-success">Провести</a>
+              <a href="?entity=appointment&action=cancel&id=<?= $a['appointment_id'] ?>"
+                 class="btn btn-sm btn-danger">Отмена</a>
+            <?php endif; ?>
           </td>
         </tr>
         <?php endforeach; ?>
