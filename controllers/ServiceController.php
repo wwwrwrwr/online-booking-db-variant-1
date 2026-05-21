@@ -55,8 +55,8 @@ class ServiceController
     private function createAction(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-                setFlashMessage('error', 'Ошибка безопасности');
+            if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
+                $_SESSION['flash_error'] = 'Ошибка безопасности';
                 header('Location: ?entity=service&action=list');
                 exit;
             }
@@ -68,11 +68,11 @@ class ServiceController
                         'price'            => (float)$_POST['price'],
                         'duration_minutes' => (int)$_POST['duration_minutes']
                     ]);
-                    setFlashMessage('success', 'Услуга добавлена');
+                    $_SESSION['flash_success'] = 'Услуга добавлена';
                     header('Location: ?entity=service&action=list');
                     exit;
                 } catch (RepositoryException $e) {
-                    setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
+                    $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
                 }
             }
             $title   = 'Добавить услугу';
@@ -107,8 +107,8 @@ class ServiceController
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-                setFlashMessage('error', 'Ошибка безопасности');
+            if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
+                $_SESSION['flash_error'] = 'Ошибка безопасности';
                 header('Location: ?entity=service&action=list');
                 exit;
             }
@@ -128,11 +128,11 @@ class ServiceController
                         'duration_minutes' => (int)$_POST['duration_minutes'],
                         'id'               => $id
                     ]);
-                    setFlashMessage('success', 'Услуга обновлена');
+                    $_SESSION['flash_success'] = 'Услуга обновлена';
                     header('Location: ?entity=service&action=list');
                     exit;
                 } catch (RepositoryException $e) {
-                    setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
+                    $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
                 }
             }
             $title   = 'Редактировать услугу';
@@ -165,8 +165,8 @@ class ServiceController
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
-                setFlashMessage('error', 'Ошибка безопасности');
+            if (($_POST['csrf_token'] ?? '') !== ($_SESSION['csrf_token'] ?? '')) {
+                $_SESSION['flash_error'] = 'Ошибка безопасности';
                 header('Location: ?entity=service&action=list');
                 exit;
             }
@@ -176,16 +176,16 @@ class ServiceController
             $stmt->execute(['id' => $id]);
             $count = (int)$stmt->fetchColumn();
             if ($count > 0) {
-                setFlashMessage('error',
-                    "Нельзя удалить: услуга используется в $count записях");
+                $_SESSION['flash_error'] =
+                    "Нельзя удалить: услуга используется в $count записях";
                 header('Location: ?entity=service&action=list');
                 exit;
             }
             try {
                 $this->repo->delete($id);
-                setFlashMessage('success', 'Услуга удалена');
+                $_SESSION['flash_success'] = 'Услуга удалена';
             } catch (RepositoryException $e) {
-                setFlashMessage('error', 'Ошибка: ' . $e->getMessage());
+                $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
             }
             header('Location: ?entity=service&action=list');
             exit;
