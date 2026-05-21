@@ -2,7 +2,7 @@
   <h2><?= $isEdit ? 'Редактировать врача' : 'Добавить врача' ?></h2>
   <form method="post">
     <input type="hidden" name="csrf_token"
-           value="<?= htmlspecialchars(generateCsrfToken()) ?>">
+       value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 
     <div class="mb-3">
       <label>Фамилия *</label>
