@@ -6,7 +6,7 @@
   </div>
   <form method="post">
     <input type="hidden" name="csrf_token"
-           value="<?= htmlspecialchars(generateCsrfToken()) ?>">
+           value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
     <button type="submit" class="btn btn-danger">Удалить</button>
     <a href="?entity=service&action=list" class="btn btn-secondary">Отмена</a>
   </form>
