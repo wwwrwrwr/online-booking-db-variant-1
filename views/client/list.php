@@ -3,7 +3,7 @@
 // Страница списка клиентов
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>📋 Клиенты</h2>
+    <h2>Клиенты</h2>
     <a href="?entity=<?= $entity ?>&action=create" class="btn btn-primary">+ Добавить</a>
 </div>
 
@@ -47,8 +47,8 @@
                     <td><?= htmlspecialchars($c['email']) ?></td>
                     <td><?= htmlspecialchars($c['birth_date']) ?></td>
                     <td>
-                        <a href="?entity=<?= $entity ?>&action=edit&id=<?= $c['client_id'] ?>" class="btn btn-sm btn-warning">✏️</a>
-                        <a href="?entity=<?= $entity ?>&action=delete&id=<?= $c['client_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Удалить?')">🗑️</a>
+                        <a href="?entity=<?= $entity ?>&action=edit&id=<?= $c['client_id'] ?>" class="btn btn-sm btn-warning">Изменить</a>
+                        <a href="?entity=<?= $entity ?>&action=delete&id=<?= $c['client_id'] ?>" class="btn btn-sm btn-danger">Удалить</a>
                     </td>
                 </tr>
                 <?php endforeach; ?>
