@@ -37,7 +37,8 @@
 - Ошибки целостности БД перехватываются и преобразуются в `RepositoryException`
 - Пароли и конфигурация вынесены в `.gitignore`
 
-Совместная работа
+## Совместная работа
+
 Напарник: elbor870 — https://github.com/elbor870
 PR который я отправил в репозиторий напарника:
 https://github.com/elbor870/online-booking-db-variant-3/pull/1
@@ -49,7 +50,7 @@ https://github.com/wwwrwrwr/online-booking-db-variant-1/pull/1
 Обработка action=view в index.php с JOIN-запросами к таблицам cars и appointments
 Кнопка «Просмотр» в views/client/list.php
 
-Что напарник добавил мне (стоматология):
+## Что напарник добавил мне (стоматология):
 
 Страница просмотра карточки клиента views/client/view.php с информацией о клиенте и его записями на приём
 Метод viewAction() в ClientController.php с JOIN-запросом к врачам и услугам
