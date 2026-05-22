@@ -23,6 +23,9 @@ class ClientController
             case 'create':
                 $this->createAction();
                 break;
+            case 'view':
+                $this->viewAction($id);
+                break;
             case 'edit':
                 $this->editAction($id);
                 break;
@@ -108,7 +111,10 @@ class ClientController
                     $_SESSION['flash_success'] = 'Клиент успешно добавлен';
                     header('Location: ?entity=client&action=list');
                     exit;
-                } catch (RepositoryException $e) {
+                } catch (RepositoryException $e)
+
+
+{
                     $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
                 }
             } else {
@@ -130,6 +136,43 @@ class ClientController
             'old'    => [],
             'isEdit' => false,
             'entity' => $this->entity
+        ]);
+        require __DIR__ . '/../views/layout.php';
+    }
+
+    private function viewAction(?int $id): void
+    {
+        if ($id === null) {
+            http_response_code(400);
+            echo "Не указан ID";
+            return;
+        }
+
+        $client = $this->repo->findById($id);
+        if (!$client) {
+            http_response_code(404);
+            echo "Клиент не найден";
+            return;
+        }
+
+        $stmt = $this->pdo->prepare("
+            SELECT a.appointment_datetime, a.status,
+                   d.last_name AS dentist_last_name,
+                   s.service_name
+            FROM appointments a
+            JOIN dentists d ON a.dentist_id = d.dentist_id
+            JOIN services s ON a.service_id = s.service_id
+            WHERE a.client_id = :id
+            ORDER BY a.appointment_datetime DESC
+        ");
+        $stmt->execute(['id' => $id]);
+        $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $title = 'Карточка клиента';
+        $content = $this->render('client/view', [
+            'client'       => $client,
+            'appointments' => $appointments,
+            'entity'       => $this->entity
         ]);
         require __DIR__ . '/../views/layout.php';
     }
@@ -182,7 +225,8 @@ class ClientController
                     header('Location: ?entity=client&action=list');
                     exit;
                 } catch (RepositoryException $e) {
-                    $_SESSION['flash_error'] = 'Ошибка: ' . $e->getMessage();
+                    $_SESSION['flash_error'] = 'Ошибка: ' .
+                        $e->getMessage();
                 }
             } else {
                 $title = 'Редактировать клиента';
