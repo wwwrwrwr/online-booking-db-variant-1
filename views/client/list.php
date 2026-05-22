@@ -2,6 +2,7 @@
 // views/client/list.php
 // Страница списка клиентов
 ?>
+<div class="container mt-4">
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Клиенты</h2>
     <a href="?entity=<?= $entity ?>&action=create" class="btn btn-primary">+ Добавить</a>
@@ -12,8 +13,7 @@
     <input type="hidden" name="entity" value="<?= $entity ?>">
     <input type="hidden" name="action" value="list">
     <div class="col-md-4">
-        <input type="text" name="search" class="form-control" placeholder="Поиск по фамилии..." 
-               value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+        <input type="text" name="search" class="form-control" placeholder="Поиск по фамилии..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
     </div>
     <div class="col-auto">
         <button type="submit" class="btn btn-secondary">Найти</button>
@@ -47,6 +47,7 @@
                     <td><?= htmlspecialchars($c['email']) ?></td>
                     <td><?= htmlspecialchars($c['birth_date']) ?></td>
                     <td>
+                        <a href="?entity=<?= $entity ?>&action=view&id=<?= $c['client_id'] ?>" class="btn btn-sm btn-info">Просмотр</a>
                         <a href="?entity=<?= $entity ?>&action=edit&id=<?= $c['client_id'] ?>" class="btn btn-sm btn-warning">Изменить</a>
                         <a href="?entity=<?= $entity ?>&action=delete&id=<?= $c['client_id'] ?>" class="btn btn-sm btn-danger">Удалить</a>
                     </td>
@@ -61,13 +62,12 @@
     <nav>
         <ul class="pagination">
             <?php for ($p = 1; $p <= $pages; $p++): ?>
-                <li class="page-item <?= $p === $page ? 'active' : '' ?>">
-                    <a class="page-link" href="?entity=<?= $entity ?>&action=list&page=<?= $p ?>&sort=<?= $orderBy ?>&dir=<?= $direction ?>">
-                        <?= $p ?>
-                    </a>
-                </li>
+            <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                <a class="page-link" href="?entity=<?= $entity ?>&action=list&page=<?= $p ?>&sort=<?= $orderBy ?>&dir=<?= $direction ?>"><?= $p ?></a>
+            </li>
             <?php endfor; ?>
         </ul>
     </nav>
     <?php endif; ?>
 <?php endif; ?>
+</div>
