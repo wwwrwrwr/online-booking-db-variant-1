@@ -63,7 +63,7 @@
         <ul class="pagination">
             <?php for ($p = 1; $p <= $pages; $p++): ?>
             <li class="page-item <?= $p === $page ? 'active' : '' ?>">
-                <a class="page-link" href="?entity=<?= $entity ?>&action=list&page=<?= $p ?>&sort=<?= $orderBy ?>&dir=<?= $direction ?>"><?= $p ?></a>
+                <a class="page-link" href="?entity=<?= $entity ?>&action=list&page=<?= $p ?>&sort=<?= $orderBy ?>&dir=<?= $direction ?>&search=<?= urlencode($search ?? '') ?>"><?= $p ?></a>
             </li>
             <?php endfor; ?>
         </ul>
